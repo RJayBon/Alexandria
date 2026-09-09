@@ -14,10 +14,10 @@ the UI on the next sync.
 
 ```bash
 # 1. Database
-mysql -u root -p < database.sql          # creates alexandria_library + demo data + procedures
+# Import database.sql into the pre-created hosted database
+mysql -h sql202.infinityfree.com -P 3306 -u if0_42877310 -p if0_42877310_alexandria_library < database.sql
 
-# 2. Credentials (XAMPP defaults already work: root / no password)
-nano config.php
+# 2. Credentials are configured in config.php for the hosted database
 
 # 3. Files — put this folder into Apache's web root
 cp -r library-system /opt/lampp/htdocs/  # or C:\xampp\htdocs\

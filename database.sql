@@ -3,11 +3,11 @@
 -- database.sql · MySQL 8.0+ (works on 5.7+, but 8.0 recommended)
 --
 -- ONE-COMMAND DEPLOY:
---     mysql -u root -p < database.sql
+--     mysql -h sql202.infinityfree.com -P 3306 -u if0_42877310 -p if0_42877310_alexandria_library < database.sql
 --   or in phpMyAdmin:  Import → choose this file → Go
 --
 -- WHAT YOU GET:
---   1. Database ``alexandria_library`` (utf8mb4, InnoDB)
+--   1. Database ``if0_42877310_alexandria_library`` (utf8mb4, InnoDB)
 --   2. Tables: patrons, books, loans, waitlist, checkin_checkpoints,
 --      history_events, notifications
 --   3. Demo seed data — identical to the front-end demo (same titles,
@@ -23,9 +23,7 @@
 --        sp_expire_holds       → called every minute by a scheduled EVENT
 -- ============================================================================
 
-CREATE DATABASE IF NOT EXISTS alexandria_library
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE alexandria_library;
+USE if0_42877310_alexandria_library;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS notifications;
@@ -729,7 +727,7 @@ DELIMITER ;
 -- CREATE USER IF NOT EXISTS 'alexandria_app'@'%'
 --   IDENTIFIED BY 'CHANGE_THIS_STRONG_PASSWORD';
 -- GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE
---   ON alexandria_library.* TO 'alexandria_app'@'%';
+--   ON if0_42877310_alexandria_library.* TO 'alexandria_app'@'%';
 -- FLUSH PRIVILEGES;
 
 -- ============================================================================
