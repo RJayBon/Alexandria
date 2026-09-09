@@ -88,8 +88,9 @@
     selectedLoanCode: null,
     borrowTarget: null,
     user: store.get('alexandria:user', 'Guest Reader'),
-    warnedDue: new Set(),
     warnedOver: new Set(),
+    warnedDue: new Set(),
+    dbOffline: true,
   };
   window.ALEXANDRIA = state;
 
@@ -138,10 +139,12 @@
       const res = await fetch('api/bootstrap.php', { cache: 'no-store' });
       const data = await res.json();
       if (!data.ok) throw new Error(data.message || 'Sync failed');
+      state.dbOffline = false;
       hydrate(data.state);
       scanDueDates();
       renderAll();
     } catch (e) {
+      state.dbOffline = true;
       notify('error', 'Sync failed', e.message + ' — showing last known state.');
     }
   }
@@ -837,6 +840,7 @@
   wire();
 
   if (BOOT.ok && BOOT.state) {
+    state.dbOffline = false;
     hydrate(BOOT.state);
     const startView = location.hash.replace('#', '');
     go(VIEWS.includes(startView) ? startView : 'catalog');

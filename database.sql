@@ -20,7 +20,7 @@
 --        sp_checkin_book       → POST /api/returns
 --        sp_undo_checkin       → POST /api/returns/:id/undo
 --        sp_join_waitlist      → POST /api/books/:id/waitlist
---        sp_expire_holds       → called every minute by a scheduled EVENT
+--        sp_expire_holds       → called during state refreshes
 -- ============================================================================
 
 USE if0_42877310_alexandria_library;
@@ -704,25 +704,7 @@ END$$
 DELIMITER ;
 
 -- ============================================================================
--- 6 · SCHEDULED EVENT — 48-h hold expiry, every minute
---     Requires the event scheduler: SET GLOBAL event_scheduler = ON;
---     (on shared hosting / phpMyAdmin you may not have SUPER privileges —
---      in that case just call  CALL sp_expire_holds();  from a cron job)
--- ============================================================================
-
-DROP EVENT IF EXISTS ev_expire_holds;
-
-DELIMITER $$
-CREATE EVENT ev_expire_holds
-  ON SCHEDULE EVERY 1 MINUTE
-  DO
-  BEGIN
-    CALL sp_expire_holds();
-  END$$
-DELIMITER ;
-
--- ============================================================================
--- 7 · APP DATABASE USER  (uncomment and change the password before deploy)
+-- 6 · APP DATABASE USER  (uncomment and change the password before deploy)
 -- ============================================================================
 -- CREATE USER IF NOT EXISTS 'alexandria_app'@'%'
 --   IDENTIFIED BY 'CHANGE_THIS_STRONG_PASSWORD';
@@ -731,7 +713,7 @@ DELIMITER ;
 -- FLUSH PRIVILEGES;
 
 -- ============================================================================
--- 8 · SMOKE TEST  (run these after import to confirm everything works)
+-- 7 · SMOKE TEST  (run these after import to confirm everything works)
 -- ============================================================================
 --   SELECT * FROM v_availability_summary;      -- 18 titles, 11 available, 6 on loan, 1 on hold, 4 queued
 --   SELECT * FROM v_active_loans;              -- overdue Zarathustra first, Dune due in ~95 min

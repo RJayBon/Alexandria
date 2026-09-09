@@ -12,7 +12,8 @@ $bootState = null;
 try {
     $bootState = build_state(get_pdo());
 } catch (Throwable $e) {
-    $dbError = $e->getMessage();
+    error_log('Alexandria page database error: ' . $e->getMessage());
+    $dbError = 'Database unavailable';
 }
 ?>
 <!doctype html>
@@ -56,7 +57,7 @@ try {
     <div class="ds-chips" title="Data structures implemented from scratch">
       <span>BST</span><span>HASH</span><span>LIST</span><span>STACK</span><span>QUEUE</span>
     </div>
-    <a class="dl-btn" href="../library-system.zip" download="alexandria-library-system.zip">
+    <a class="dl-btn" href="https://github.com/RJayBon/Alexandria" target="_blank" rel="noopener noreferrer">
       <i data-lucide="file-down"></i>
       <span>Download Source (.zip)</span>
     </a>
@@ -264,7 +265,7 @@ undo():                 // sp_undo_checkin
           <li><code>api/events.php?since_id=N</code> → FIFO toast feed from the <code>notifications</code> table (polled every 12 s — open two browsers to watch events propagate).</li>
           <li>Deploy: import <code>database.sql</code> → edit <code>config.php</code> → drop this folder in Apache's <code>htdocs</code>.</li>
         </ul>
-        <a class="btn btn-primary wide" href="../library-system.zip" download="alexandria-library-system.zip"><i data-lucide="file-down"></i>Download full source (.zip)</a>
+        <a class="btn btn-primary wide" href="https://github.com/RJayBon/Alexandria" target="_blank" rel="noopener noreferrer"><i data-lucide="file-down"></i>View full source on GitHub</a>
       </article>
 
     </div>

@@ -69,8 +69,9 @@ it is due back, and who is next in line — instantly, fairly, and reversibly.
 | 4 | **Books Availability Monitoring** | `books.status` ENUM + live counters; BST/HashTable client indexes for instant search |
 | 5 | **Real-Time Notification Alerts** | `notifications` table polled every 12 s (`since_id`), delivered FIFO |
 
-Plus: LIFO check-in undo, overdue / due-soon scanner, 48-h hold expiry via a
-MySQL EVENT (`sp_expire_holds`, every minute).
+Plus: LIFO check-in undo, overdue / due-soon scanner, and 48-hour hold expiry.
+Hold expiry runs opportunistically during state refreshes, which avoids requiring
+the MySQL event scheduler on shared hosting.
 
 ## 5 · Data Structures (and how they are implemented)
 
@@ -115,5 +116,5 @@ Open the system in **two browsers**. Every mutation inserts into
 expiries) — the other browser receives them within 12 seconds as FIFO toasts.
 The `DEL`/`SIGNAL` logic stays identical; only the transport differs.
 
-> Hold expiry needs `SET GLOBAL event_scheduler = ON;` — if your host forbids
-> it, call `CALL sp_expire_holds();` from a cron job each minute instead.
+> Hold expiry is checked during every state refresh through `sp_expire_holds()`;
+> no MySQL event-scheduler privilege is required.

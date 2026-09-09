@@ -54,6 +54,15 @@ function ms(?string $dt): ?int {          // 'Y-m-d H:i:s' → epoch ms
 
 /* ------------------------------ state builder ---------------------------- */
 function build_state(PDO $pdo): array {
+    /* Shared hosts often disable CREATE EVENT and event_scheduler. Expire
+       holds opportunistically during each state refresh instead. */
+    try {
+        $expiry = $pdo->query('CALL sp_expire_holds()');
+        $expiry->closeCursor();
+    } catch (Throwable $e) {
+        error_log('Alexandria hold-expiry check failed: ' . $e->getMessage());
+    }
+
     /* books + attached loan + hold patron */
     $rows = $pdo->query(
         "SELECT b.id, b.isbn, b.title, b.author, b.genre, b.pub_year, b.hue, b.status,

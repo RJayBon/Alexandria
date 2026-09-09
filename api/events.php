@@ -28,5 +28,6 @@ try {
     }
     json_ok(['notifications' => $notifications, 'lastNotifId' => $last]);
 } catch (Throwable $e) {
-    json_err(500, 'Database error: ' . $e->getMessage());
+    error_log('Alexandria events database error: ' . $e->getMessage());
+    json_err(500, 'Database unavailable');
 }
