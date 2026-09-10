@@ -67,12 +67,11 @@ CREATE TABLE books (
   INDEX idx_books_title  (title(191))
 ) ENGINE=InnoDB;
 
--- Loans. ``code`` is GENERATED so seeded loan id=1 ⇢ LN-1001 — exactly
--- what the front-end displays. Next generated id after seeds: LN-1007.
+-- Loans. ``code`` is stored explicitly for seeded rows and assigned by
+-- sp_borrow_book for new rows: loan id=1 ⇢ LN-1001, next id ⇢ LN-1007.
 CREATE TABLE loans (
   id           INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  code         VARCHAR(10) GENERATED ALWAYS AS
-               (CONCAT('LN-', LPAD(id + 1000, 4, '0'))) STORED UNIQUE,
+  code         VARCHAR(10) NULL UNIQUE,
   book_id      VARCHAR(8)  NOT NULL,
   patron_id    VARCHAR(8)  NOT NULL,
   borrowed_at  DATETIME    NOT NULL,
@@ -161,7 +160,7 @@ BEGIN
   INSERT INTO history_events (type, message, detail, created_at)
   SELECT 'BORROW',
          CONCAT(p.full_name, ' borrowed "', b.title, '"'),
-         CONCAT('Loan ', NEW.code, ' · due ', DATE_FORMAT(NEW.due_at, '%b %e, %Y')),
+         CONCAT('Loan LN-', LPAD(NEW.id + 1000, 4, '0'), ' · due ', DATE_FORMAT(NEW.due_at, '%b %e, %Y')),
          NEW.borrowed_at
   FROM patrons p JOIN books b ON b.id = NEW.book_id
   WHERE p.id = NEW.patron_id;
@@ -239,13 +238,13 @@ INSERT INTO books (id, isbn, title, author, genre, pub_year, hue, status) VALUES
 
 -- Active loans (relative to NOW() so the demo is always alive).
 -- Trigger ``trg_loans_after_insert`` auto-writes the BORROW ledger entries.
-INSERT INTO loans (id, book_id, patron_id, borrowed_at, due_at, renewals) VALUES
-  (1, 'B01', 'P01', NOW() - INTERVAL 8 DAY,                                  NOW() + INTERVAL 6 DAY,     0),  -- LN-1001 · CLRS
-  (2, 'B02', 'P02', NOW() - INTERVAL 12 DAY,                                 NOW() + INTERVAL 2 DAY,     1),  -- LN-1002 · Knuth (queue-proof renewal)
-  (3, 'B08', 'P03', NOW() - INTERVAL 18 DAY,                                 NOW() - INTERVAL 3 HOUR,    2),  -- LN-1003 · OVERDUE demo
-  (4, 'B09', 'P04', NOW() - INTERVAL 12 DAY - INTERVAL 22 HOUR,              NOW() + INTERVAL 95 MINUTE, 0),  -- LN-1004 · DUE-SOON demo
-  (5, 'B12', 'P05', NOW() - INTERVAL 10 DAY,                                 NOW() + INTERVAL 4 DAY,     0),  -- LN-1005 · Le Guin
-  (6, 'B15', 'P06', NOW() - INTERVAL 5 DAY,                                  NOW() + INTERVAL 9 DAY,     1);  -- LN-1006 · Rothfuss
+INSERT INTO loans (id, code, book_id, patron_id, borrowed_at, due_at, renewals) VALUES
+  (1, 'LN-1001', 'B01', 'P01', NOW() - INTERVAL 8 DAY,                      NOW() + INTERVAL 6 DAY,     0),
+  (2, 'LN-1002', 'B02', 'P02', NOW() - INTERVAL 12 DAY,                     NOW() + INTERVAL 2 DAY,     1),
+  (3, 'LN-1003', 'B08', 'P03', NOW() - INTERVAL 18 DAY,                     NOW() - INTERVAL 3 HOUR,    2),
+  (4, 'LN-1004', 'B09', 'P04', NOW() - INTERVAL 12 DAY - INTERVAL 22 HOUR, NOW() + INTERVAL 95 MINUTE, 0),
+  (5, 'LN-1005', 'B12', 'P05', NOW() - INTERVAL 10 DAY,                     NOW() + INTERVAL 4 DAY,     0),
+  (6, 'LN-1006', 'B15', 'P06', NOW() - INTERVAL 5 DAY,                      NOW() + INTERVAL 9 DAY,     1);
 
 ALTER TABLE loans AUTO_INCREMENT = 7;   -- next loan will be LN-1007 ✔
 
@@ -418,6 +417,9 @@ BEGIN
   INSERT INTO loans (book_id, patron_id, borrowed_at, due_at)
   VALUES (p_book_id, v_patron, NOW(), NOW() + INTERVAL p_days DAY);
   SET v_loan_id = LAST_INSERT_ID();
+  UPDATE loans
+  SET code = CONCAT('LN-', LPAD(v_loan_id + 1000, 4, '0'))
+  WHERE id = v_loan_id;
   SELECT code INTO v_code FROM loans WHERE id = v_loan_id;
 
   UPDATE books SET status = 'borrowed', active_loan_id = v_loan_id
